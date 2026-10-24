@@ -72,7 +72,6 @@ if view_mode == "2D Orbit View":
     earth = plt.Circle((0, 0), earth_radius / 1000, color='royalblue', alpha=0.35, label="Earth")
     ax_left.add_patch(earth)
     ax_left.plot(r_coords[:, 0] / 1000, r_coords[:, 1] / 1000, color='crimson', linewidth=2, label="Flight Path")
-    
     ax_left.scatter(r_coords[0, 0] / 1000, r_coords[0, 1] / 1000, color='chartreuse', s=120, zorder=5, label="Deploy Point")
     ax_left.scatter(sat_now[0], sat_now[1], color="lime", edgecolor="black", marker="o", s=200, zorder=5, label="Satellite")
 
@@ -83,6 +82,15 @@ if view_mode == "2D Orbit View":
     ax_left.set_aspect('equal', 'box')
     ax_left.grid(True, alpha=0.3)
     ax_left.legend()
+    ap = np.argmax(alt_track)
+    pe = np.argmin(alt_track)
+    ap_x, ap_y = r_coords[ap, 0] / 1000, r_coords[ap, 1] / 1000
+    pe_x, pe_y = r_coords[pe, 0] / 1000, r_coords[pe, 1] / 1000
+    ax_left.scatter(ap_x, ap_y, color="purple", s=150, zorder=5)
+    ax_left.text(ap_x, ap_y, f"Apogee: {alt_track[ap] / 1000:.0f} km")
+    if alt_track[pe] > 0:
+        ax_left.scatter(pe_x, pe_y, color="magenta", s=150, zorder=5)
+        ax_left.text(pe_x, pe_y, f"Perigee: {alt_track[pe] / 1000:.0f} km")
 
     fig.tight_layout(pad=3.0)
 
@@ -139,6 +147,16 @@ elif view_mode == "3D Orbit View":
     ax_right.set_xlabel("Time (Hours)")
     ax_right.set_ylabel("Speed (km/s)")
     ax_right.grid(True, alpha=0.3)
+
+    ap = np.argmax(alt_track)
+    pe = np.argmin(alt_track)
+    ap_x, ap_y, ap_z = r_coords[ap, 0] / 1000, r_coords[ap, 1] / 1000, r_coords[ap] / 1000
+    pe_x, pe_y, pe_z = r_coords[pe, 0] / 1000, r_coords[pe, 1] / 1000, r_coords[pe] / 1000
+    ax_left.scatter(ap_x, ap_y, ap_z, color="purple", s=150, zorder=5)
+    ax_left.text(ap_x, ap_y, f"Apogee: {alt_track[ap] / 1000:.0f} km")
+    if alt_track[pe] > 0:
+        ax_left.scatter(pe_x, pe_y, pe_z, color="magenta", s=150, zorder=5)
+        ax_left.text(pe_x, pe_y, pe_z, f"Perigee: {alt_track[pe] / 1000:.0f} km")
 
     fig.tight_layout(pad=3.0)
 
