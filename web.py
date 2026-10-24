@@ -27,12 +27,12 @@ dt_step = st.sidebar.slider("Integration Step Intervals (Seconds)", 1, 60, 5)
 
 @st.cache_data
 def get_cached_data(altitude, speed, duration, dt, inclination):
-    return engine.simulate_orbit(
-        altitude_m = altitude,
-        speed_factor = speed,
-        duration_hours = duration,
+    return engine.sim_orbit(
+        alt_m = altitude,
+        spd_factor = speed,
+        dur_hrs = duration,
         dt = dt,
-        inclination_deg = inclination
+        inc_deg = inclination
     )
 
 
@@ -49,6 +49,7 @@ current_step = st.sidebar.slider("Simulation Timeline", 0, total_steps -1, 0, he
 sat_now = r_coords[current_step] / 1000
 hours_passed = t_arr[current_step] / 3600
 show_label = st.sidebar.checkbox("Show Numbers", value=True)
+show_grid = st.sidebar.checkbox("Show Grid Lines", value=True)
 
 # Tracks telementary values
 re_entered = alt_track[-1] <= 0
@@ -82,6 +83,14 @@ if view_mode == "2D Orbit View":
     ax_left.set_aspect('equal', 'box')
     ax_left.grid(True, alpha=0.3)
     ax_left.legend()
+
+    ax_right.plot(t_arr / 3600, speed_track /1000, color='darkturquoise', linewidth=2)
+    ax_right.ticklabel_format(axis="y", style="plain", useOffset=False)
+    ax_right.set_title("Velocity Curve Performance")
+    ax_right.set_xlabel("Time (Hours)")
+    ax_right.set_ylabel("Speed (km/s)")
+    ax_right.grid(True, alpha=0.3)
+
     ap = np.argmax(alt_track)
     pe = np.argmin(alt_track)
     ap_x, ap_y = r_coords[ap, 0] / 1000, r_coords[ap, 1] / 1000
@@ -93,13 +102,6 @@ if view_mode == "2D Orbit View":
         ax_left.text(pe_x, pe_y, f"    Perigee: {alt_track[pe] / 1000:.0f} km", fontsize=7)
 
     fig.tight_layout(pad=6.0)
-
-    ax_right.plot(t_arr / 3600, speed_track /1000, color='darkturquoise', linewidth=2)
-    ax_right.ticklabel_format(axis="y", style="plain", useOffset=False)
-    ax_right.set_title("Velocity Curve Performance")
-    ax_right.set_xlabel("Time (Hours)")
-    ax_right.set_ylabel("Speed (km/s)")
-    ax_right.grid(True, alpha=0.3)
 
     if not show_label:
         ax_left.set_xticklabels([])
@@ -123,7 +125,7 @@ elif view_mode == "3D Orbit View":
     earth_x = (earth_radius / 1000) * np.outer(np.cos(u), np.sin(v))
     earth_y = (earth_radius / 1000) * np.outer(np.sin(u), np.sin(v))
     earth_z = (earth_radius / 1000) * np.outer(np.ones(np.size(u)), np.cos(v))
-    ax_left.plot_wireframe(earth_x, earth_y, earth_z, color='royalblue', alpha=0.2, linewidth=0.8, label='Earth')
+    ax_left.plot_wireframe(earth_x, earth_y, earth_z, color='darkblue', alpha=0.5, linewidth=0.8, label='Earth')
 
     sat_x = r_coords[:, 0] / 1000
     sat_y = r_coords[:, 1] / 1000
@@ -133,11 +135,12 @@ elif view_mode == "3D Orbit View":
     ax_left.scatter(sat_x[0], sat_y[0], sat_z[0], color='chartreuse', s=100, zorder=5, label='Deployment Point')
     ax_left.scatter(sat_now[0], sat_now[1], sat_now[2], color="lime", edgecolor="black", marker="o", s=200, zorder=5, label="Satellite")
 
-    max_bound = (np.linalg.norm(r_coords, axis=1).max() / 1000) * 1.1
+    bound = max((np.linalg.norm(r_coords, axis=1).max() / 1000) * 1.05, (earth_radius / 1000) * 1.2)
     ax_left.set_title("3D Space Domain Map")
-    ax_left.set_xlim(-max_bound, max_bound)
-    ax_left.set_ylim(-max_bound, max_bound)
-    ax_left.set_zlim(-max_bound, max_bound)
+    ax_left.set_xlim(-bound, bound)
+    ax_left.set_ylim(-bound, bound)
+    ax_left.set_zlim(-bound, bound)
+    ax_left.set_box_aspect([1.2,1.2,1])
     ax_left.legend()
 
     ax_right = fig.add_subplot(1, 2, 2)
@@ -164,6 +167,12 @@ elif view_mode == "3D Orbit View":
         ax_left.set_xticklabels([])
         ax_left.set_yticklabels([])
         ax_left.set_zticklabels([])
+
+    if not show_grid:
+        ax_left.xaxis.set_pane_color(("none"))
+        ax_left.yaxis.set_pane_color(("none"))
+        ax_left.zaxis.set_pane_color(("none"))
+        ax_left.set_axis_off()
 
     st.pyplot(fig)
 
@@ -204,21 +213,6 @@ else:
         If inclination is 90 degrees: $\\cos(0)=0$ and $\\sin(90)=1$ launches the satellite over the North and South pole.
         """
         )
-        st.subheader("Safety Shield & Freeze Check")
-        st.markdown(
-        """
-        If the satellite crashes, its distance to the core ($r$) shrinks toward zero. The gravity formula is divided by $r_3$, so if it reaches zero it would cause a large crash
-        To protect it from crashing, the engine uses a **freeze check** every frame:
-        ```python
-        if np.linalg.norm(r[i+1]) < R_EARTH:
-        r[i+1:] = r[i+1]
-        v[i+1:] = np.array([0, 0, 0])
-        break
-        ```
-        r is the giant matrix containing all the satellite's positions.
-        Checks if the satellite is crashing into Earth, if yes then it freezes all the coordinates and breaks the calculation loop early.
-        """
-        )
 
     with col_right:
         st.subheader("RK4 Math Engine & Timesteps")
@@ -250,4 +244,3 @@ else:
         ```
         """
         )
-      
