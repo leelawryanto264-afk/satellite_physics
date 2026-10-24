@@ -49,17 +49,24 @@ def sim_orbit(alt_m: float, spd_factor: float, dur_hrs: float, dt: float, inc_de
 
         k1_v = acceleration(pos)
         k1_p = vel
-
         k2_v = acceleration(pos + k1_p * dt / 2.0)
         k2_p = vel + k1_v * dt / 2.0
-
         k3_v = acceleration(pos + k2_p * dt / 2.0)
         k3_p = vel + k2_v * dt / 2.0
-
         k4_v = acceleration(pos + k3_p * dt)
         k4_p = vel + k3_v * dt 
 
         v[i+1] = vel + (dt / 6.0) * (k1_v + k2_v*2 + k3_v*2 + k4_v)
         r[i+1] = pos + (dt / 6.0) * (k1_p + k2_p*2 + k3_p*2 + k4_p)
 
-    return t, r, np.zeros(steps), np.zeros(steps), R_EARTH
+    distance = np.zeros(steps)
+    for i in range(steps):
+        distance[i] = math.sqrt(r[i, 0]**2 + r[i, 1]**2 + r[i, 2]**2)
+        
+    alt = distance - R_EARTH
+    
+    spd = np.zeros(steps)
+    for i in range(steps):
+        spd[i] = math.sqrt(v[i, 0]**2 + v[i, 1]**2 + v[i, 2]**2)
+
+    return t, r, alt, spd, R_EARTH
