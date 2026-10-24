@@ -7,6 +7,7 @@ import orbit_engine as engine
 st.set_page_config(page_title="Modular Satellite Simulation", layout="wide")
 st.title("Satellite Simulator Dashboard")
 st.markdown("This is a browser-based simulation that is designed to model and visualize satellite trajectories. ")
+plt.style.use("dark_background")
 
 st.sidebar.header("Settings")
 view_mode = st.sidebar.radio(
@@ -47,6 +48,7 @@ total_steps = len(t_arr)
 current_step = st.sidebar.slider("Simulation Timeline", 0, total_steps -1, 0, help="slide to move the satellite(gonna change later)")
 sat_now = r_coords[current_step] / 1000
 hours_passed = t_arr[current_step] / 3600
+show_label = st.sidebar.checkbox("Show Numbers", value=True)
 
 # Tracks telementary values
 re_entered = alt_track[-1] <= 0
@@ -85,10 +87,15 @@ if view_mode == "2D Orbit View":
     fig.tight_layout(pad=3.0)
 
     ax_right.plot(t_arr / 3600, speed_track /1000, color='darkturquoise', linewidth=2)
+    ax_right.ticklabel_format(axis="y", style="plain", useOffset=False)
     ax_right.set_title("Velocity Curve Performance")
     ax_right.set_xlabel("Time (Hours)")
     ax_right.set_ylabel("Speed (km/s)")
     ax_right.grid(True, alpha=0.3)
+
+    if not show_label:
+        ax_left.set_xticklabels([])
+        ax_left.set_yticklabels([])
 
     st.pyplot(fig)
 
@@ -127,12 +134,18 @@ elif view_mode == "3D Orbit View":
 
     ax_right = fig.add_subplot(1, 2, 2)
     ax_right.plot(t_arr / 3600, speed_track / 1000, color='darkturquoise', linewidth=2)
+    ax_right.ticklabel_format(axis="y", style="plain", useOffset=False)
     ax_right.set_title("Velocity Curve Performance")
     ax_right.set_xlabel("Time (Hours)")
     ax_right.set_ylabel("Speed (km/s)")
     ax_right.grid(True, alpha=0.3)
 
     fig.tight_layout(pad=3.0)
+
+    if not show_label:
+        ax_left.set_xticklabels([])
+        ax_left.set_yticklabels([])
+        ax_left.set_zticklabels([])
 
     st.pyplot(fig)
 
@@ -151,7 +164,7 @@ else:
         from Earth's gravitational pull with the centrifugal force of the satellite's speed
         """
     )
-        st.latex(r"G \(\frac{M \cdot m}{r^2} = \frac{m \cdot v^2}{r}\)")
+        st.latex(r"G \frac{M \cdot m}{r^2} = \frac{m \cdot v^2}{r}")
         st.markdown("**Note: Space distances are measured from the Earth's core (6,371 km) and adds the satellite's surface altitude.")
 
         st.subheader("Inclination Degree (Tilt)")
@@ -159,50 +172,18 @@ else:
         """
         Orbits don't stay parallel to Earth's equator, they tilt. Using Trignometry (X, Y, Z)
         the orbit in the flat 2D plane can tilt into the coordinate system of the 3D plane. 
-        By passing the inclination angle ($\theta$) converted into radians for the velocity 
+        By passing the inclination angle ($\\theta$) converted into radians for the velocity 
         vector to break into horizontal or vertical components: 
         """
     )
         st.latex(r"v_x = 0.0")
-        st.latex(r"v_y \(= v_{\text{total}} \cdot \sin\theta)")
-        st.latex(r"v_z \(= v_{\text{total}} \cdot \cos\theta)")
+        st.latex(r"v_y = v_{\text{total}} \cdot \sin\theta")
+        st.latex(r"v_z = v_{\text{total}} \cdot \cos\theta")
 
         st.markdown(
         """
-        If inclination is 0 degrees: $\cos(0)=1$ and $\sin(0)=0$ creating an orbit on the equator
-        If inclination is 90 degrees: $\cos(0)=0$ and $\sin(90)=1$ launches the satellite over the North and South pole
-        """
-        )
-
-    with col_right:
-        st.subheader("RK4 Math Engine & Timesteps")
-        st.markdown(
-        """
-        Physics formulas shows one exact moment for acceleration, but the computer needs to simulate in snapshots called Time steps ($\Delta t$)
-        To avoid glitches and simulation drifts, the engine uses Runge-Kutta 4th Order (RK4) integration. It uses 4 mini points inside one step to find an accurate weighted average:
-
-        $k_1$ Checks acceleration at the start of the interval
-        $k_2$ Takes a half-step using $k_1$'s slope to test the graity at the  midpoint
-        $k_3$ Resets and takes another second half step front based on $k_2$
-        $k_4$ Takes a full step across the interval using $k_3$'s slope
-        
-        Combine the slopes using the weighted average formula where the mid steps get double weights:
-        """
-        )
-        st.latex(r"y_{i+1} = y_i + \frac{\Delta t}{6}(k_1 + k_2 + k_3 + k_4)")
-
-        st.subheader("Computer Memory & Pre-allocation")
-        st.markdown(
-        """
-        Instead of calculating the numbers one by one, the storage data grid can be allocated using numpy arrays to process the numbers faster.
-        The matrix grids track the channels for every timestep snapshot. It ensures that the graphics load in a fraction of  second.
-
-        ```python
-        t = np.linspace(0, duration_seconds, steps)
-        r = np.zeros((steps, 3))
-        v = np.zeros((steps, 3))
-        ```
-        ---
+        If inclination is 0 degrees: $\\cos(0)=1$ and $\\sin(0)=0$ creating an orbit on the equator.
+        If inclination is 90 degrees: $\\cos(0)=0$ and $\\sin(90)=1$ launches the satellite over the North and South pole.
         """
         )
         st.subheader("Safety Shield & Freeze Check")
@@ -216,7 +197,39 @@ else:
         v[i+1:] = np.array([0, 0, 0])
         break
         ```
-        r is the giant matrix containing all the satellite's positions
+        r is the giant matrix containing all the satellite's positions.
         Checks if the satellite is crashing into Earth, if yes then it freezes all the coordinates and breaks the calculation loop early.
         """
         )
+
+    with col_right:
+        st.subheader("RK4 Math Engine & Timesteps")
+        st.markdown(
+        """
+        Physics formulas shows one exact moment for acceleration, but the computer needs to simulate in snapshots called Time steps ($Delta t$)
+        To avoid glitches and simulation drifts, the engine uses Runge-Kutta 4th Order (RK4) integration. It uses 4 mini points inside one step to find an accurate weighted average:
+
+        $k_1$ Checks acceleration at the start of the interval
+        $k_2$ Takes a half-step using $k_1$'s slope to test the graity at the  midpoint
+        $k_3$ Resets and takes another second half step front based on $k_2$
+        $k_4$ Takes a full step across the interval using $k_3$'s slope
+        
+        Combine the slopes using the weighted average formula where the mid steps get double weights:
+        """
+        )
+        st.latex(r"y_{i+1} = y_i + \frac{\Delta t}{6}(k_1 + 2*k_2 + 2*k_3 + k_4)")
+
+        st.subheader("Computer Memory & Pre-allocation")
+        st.markdown(
+        """
+        Instead of calculating the numbers one by one, the storage data grid can be allocated using numpy arrays to process the numbers faster.
+        The matrix grids track the channels for every timestep snapshot. It ensures that the graphics load in a fraction of  second.
+
+        ```python
+        t = np.linspace(0, duration_seconds, steps)
+        r = np.zeros((steps, 3))
+        v = np.zeros((steps, 3))
+        ```
+        """
+        )
+      
