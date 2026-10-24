@@ -10,16 +10,15 @@ def calculate_circular_velocity(altitude_m: float) -> float:
     return np.sqrt(GM / r_magnitude)
 
 def simulate_orbit(altitude_m:float, speed_factor: float, duration_hours: float, dt: float, inclination_deg: float=45.0):
-    # Solves the 2-Body orbital mechanics trajectories using RK4 integration vectors explainn
+    # Solves the 2-Body orbital mechanics trajectories using RK4 integration vectors 
     duration_seconds = duration_hours * 3600
     steps = int(duration_seconds / dt)
 
-    #
     r0_magnitude = R_EARTH + altitude_m
     v_circular = calculate_circular_velocity(altitude_m)
     v0_magnitude = v_circular * (speed_factor / 100.0)
 
-    # Initialize State Array explain moreee
+    # Initialize State Array 
     t = np.linspace(0,duration_seconds, steps)
     r = np.zeros((steps, 3))
     v = np.zeros((steps, 3))
@@ -37,7 +36,7 @@ def simulate_orbit(altitude_m:float, speed_factor: float, duration_hours: float,
             return np.array([0.0, 0.0, 0.0])
         return -GM * pos_vector / (r_mag**3)
 
-    # Core Numerical Logic Loop (Runge-Kutta 4th Order Integrator) get formullaaa and explain
+    # Core Numerical Logic Loop (Runge-Kutta 4th Order Integrator)
     for i in range(steps - 1):
         pos = r[i]
         vel = v[i]
@@ -54,7 +53,6 @@ def simulate_orbit(altitude_m:float, speed_factor: float, duration_hours: float,
         k4_v = get_acceleration(pos + k3_p * dt)
         k4_p = vel + k3_v * dt 
 
-        #explain
         v[i+1] = vel + (dt / 6) * (k1_v + k2_v*2 + k3_v*2 + k4_v)
         r[i+1] = pos + (dt / 6) * (k1_p + k2_p*2 + k3_p*2 + k4_p)
 
