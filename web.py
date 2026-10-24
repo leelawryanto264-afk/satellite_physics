@@ -87,12 +87,12 @@ if view_mode == "2D Orbit View":
     ap_x, ap_y = r_coords[ap, 0] / 1000, r_coords[ap, 1] / 1000
     pe_x, pe_y = r_coords[pe, 0] / 1000, r_coords[pe, 1] / 1000
     ax_left.scatter(ap_x, ap_y, color="purple", s=150, zorder=5)
-    ax_left.text(ap_x, ap_y, f"Apogee: {alt_track[ap] / 1000:.0f} km")
+    ax_left.text(ap_x, ap_y, f"    Apogee: {alt_track[ap] / 1000:.0f} km", fontsize=7)
     if alt_track[pe] > 0:
         ax_left.scatter(pe_x, pe_y, color="magenta", s=150, zorder=5)
-        ax_left.text(pe_x, pe_y, f"Perigee: {alt_track[pe] / 1000:.0f} km")
+        ax_left.text(pe_x, pe_y, f"    Perigee: {alt_track[pe] / 1000:.0f} km", fontsize=7)
 
-    fig.tight_layout(pad=3.0)
+    fig.tight_layout(pad=6.0)
 
     ax_right.plot(t_arr / 3600, speed_track /1000, color='darkturquoise', linewidth=2)
     ax_right.ticklabel_format(axis="y", style="plain", useOffset=False)
@@ -150,15 +150,15 @@ elif view_mode == "3D Orbit View":
 
     ap = np.argmax(alt_track)
     pe = np.argmin(alt_track)
-    ap_x, ap_y, ap_z = r_coords[ap, 0] / 1000, r_coords[ap, 1] / 1000, r_coords[ap] / 1000
-    pe_x, pe_y, pe_z = r_coords[pe, 0] / 1000, r_coords[pe, 1] / 1000, r_coords[pe] / 1000
+    ap_x, ap_y, ap_z = r_coords[ap, 0] / 1000, r_coords[ap, 1] / 1000, r_coords[ap, 2] / 1000
+    pe_x, pe_y, pe_z = r_coords[pe, 0] / 1000, r_coords[pe, 1] / 1000, r_coords[pe, 2] / 1000
     ax_left.scatter(ap_x, ap_y, ap_z, color="purple", s=150, zorder=5)
-    ax_left.text(ap_x, ap_y, f"Apogee: {alt_track[ap] / 1000:.0f} km")
+    ax_left.text(ap_x, ap_y, ap_z, f"    Apogee: {alt_track[ap] / 1000:.0f} km", fontsize=7)
     if alt_track[pe] > 0:
         ax_left.scatter(pe_x, pe_y, pe_z, color="magenta", s=150, zorder=5)
-        ax_left.text(pe_x, pe_y, pe_z, f"Perigee: {alt_track[pe] / 1000:.0f} km")
+        ax_left.text(pe_x, pe_y, pe_z, f"    Perigee: {alt_track[pe] / 1000:.0f} km", fontsize=7)
 
-    fig.tight_layout(pad=3.0)
+    fig.tight_layout(pad=6.0)
 
     if not show_label:
         ax_left.set_xticklabels([])
